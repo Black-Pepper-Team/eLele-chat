@@ -1,4 +1,4 @@
-import { PrivateKey, PublicKey } from "@iden3/js-crypto";
+import { PrivateKey, PublicKey, Signature } from "@iden3/js-crypto";
 
 import { toLittleEndian } from "@iden3/js-iden3-core";
 
@@ -11,6 +11,10 @@ export class Identity {
 
     this.sk = key;
     this.PK = publicKey;
+  }
+
+  public signHash(hash: bigint): Signature {
+    return this.sk.signPoseidon(hash);
   }
 
   public static ExtractPubXY(privateKHex: string): [PrivateKey, PublicKey] {

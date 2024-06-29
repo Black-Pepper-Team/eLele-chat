@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import {PoseidonUnit2L, PoseidonUnit3L} from "@iden3/contracts/lib/Poseidon.sol";
+import {PoseidonUnit1L, PoseidonUnit2L, PoseidonUnit3L} from "@iden3/contracts/lib/Poseidon.sol";
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
@@ -58,7 +58,9 @@ contract PoseidonSMT is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         bytes32 keyOfElement_,
         bytes32 element_
     ) external onlyAuthenticationStorage withRootUpdate {
-        _bytes32Tree.add(keyOfElement_, element_);
+        uint256 index_ = PoseidonUnit1L.poseidon([uint256(keyOfElement_)]);
+
+        _bytes32Tree.add(bytes32(index_), element_);
     }
 
     /**

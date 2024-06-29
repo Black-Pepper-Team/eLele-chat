@@ -6,6 +6,7 @@ import { ProofStruct } from "@solarity/zkit";
 // @ts-ignore
 import { poseidonContract } from "circomlibjs";
 import { VerifierHelper } from "@/generated-types/ethers/contracts/AuthenticationStorage";
+import { Poseidon } from "@iden3/js-crypto";
 
 export async function getPoseidon(num: number): Promise<BaseContract> {
   if (num < 1 || num > 6) {
@@ -43,4 +44,29 @@ export function swap(arr: any, i: number, j: number) {
 
 export function padElement(element: any) {
   return ethers.toBeHex(element, 32);
+}
+
+export function buildCredentialId(
+  contractId: string,
+  nftId: number,
+  nftOwner: string,
+  babyJubJubPK_Ax: bigint,
+  babyJubJubPK_Ay: bigint,
+  timestamp: number,
+): string {
+  return ethers.toBeHex(
+    Poseidon.hash([
+      BigInt(contractId),
+      BigInt(nftId),
+      BigInt(nftOwner),
+      BigInt(babyJubJubPK_Ax),
+      BigInt(babyJubJubPK_Ay),
+      BigInt(timestamp),
+    ]),
+    32,
+  );
+}
+
+export function getMessageHash(message: string) {
+  return BigInt(ethers.toBeHex("0x" + ethers.id(message).slice(4), 31));
 }

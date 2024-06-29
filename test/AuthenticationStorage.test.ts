@@ -28,13 +28,14 @@ describe("AuthenticationStorage", () => {
 
     const AuthStorage = await ethers.getContractFactory("AuthenticationStorage", {
       libraries: {
-        PoseidonUnit5L: await (await getPoseidon(5)).getAddress(),
+        PoseidonUnit3L: await (await getPoseidon(3)).getAddress(),
       },
     });
     authStorage = await AuthStorage.deploy();
 
     const PoseidonSMT = await ethers.getContractFactory("PoseidonSMT", {
       libraries: {
+        PoseidonUnit1L: await (await getPoseidon(1)).getAddress(),
         PoseidonUnit2L: await (await getPoseidon(2)).getAddress(),
         PoseidonUnit3L: await (await getPoseidon(3)).getAddress(),
       },
@@ -70,15 +71,17 @@ describe("AuthenticationStorage", () => {
     it("should register with valid proof correctly", async () => {
       const circuit = await zkit.getCircuit("VerifiableCommitment");
 
-      const deadline = (await time.latest()) + 1000;
+      const deadline = (await time.latest()) + 15;
+      const timestamp = (await time.latest()) + 10;
 
       const data = await circuit.generateProof({
         contractId: await erc721.getAddress(),
         nftId: 1,
         nftOwner: SECOND.address,
         deadline: deadline,
-        babyJubJubPK: "0x" + secondIdentity.PK.hex(),
-        timestamp: (await time.latest()) + 10,
+        babyJubJubPK_Ax: secondIdentity.PK.p[0],
+        babyJubJubPK_Ay: secondIdentity.PK.p[1],
+        timestamp,
       });
 
       const proof = normalizeProof(data);
