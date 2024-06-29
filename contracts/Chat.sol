@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
+import {Paginator} from "@solarity/solidity-lib/libs/arrays/Paginator.sol";
 import {SetHelper} from "@solarity/solidity-lib/libs/arrays/SetHelper.sol";
 import {DynamicSet} from "@solarity/solidity-lib/libs/data-structures/DynamicSet.sol";
-
 import {VerifierHelper} from "@solarity/solidity-lib/libs/zkp/snarkjs/VerifierHelper.sol";
 
 import {PoseidonSMT} from "./PoseidonSMT.sol";
@@ -19,6 +21,15 @@ contract Chat is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
     using SetHelper for DynamicSet.StringSet;
     using DynamicSet for DynamicSet.StringSet;
+    using Paginator for DynamicSet.StringSet;
+
+    using Paginator for EnumerableSet.UintSet;
+    using EnumerableSet for EnumerableSet.UintSet;
+
+    struct Message {
+        string message;
+        uint256 timestamp;
+    }
 
     uint256 public constant DEADLINE_VALIDITY_WINDOW = 1 hours;
 
@@ -27,6 +38,7 @@ contract Chat is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     PoseidonSMT public credentialStorage;
 
     mapping(address => DynamicSet.StringSet) private _chatByNFT;
+    mapping(address => EnumerableSet.UintSet) private _timestampsByChat;
 
     event MessagePosted(IERC721 nft, string message);
 
@@ -76,8 +88,26 @@ contract Chat is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         }
 
         _chatByNFT[address(nft_)].add(message_);
+        _timestampsByChat[address(nft_)].add(block.timestamp);
 
         emit MessagePosted(nft_, message_);
+    }
+
+    function listMessages(
+        address nft_,
+        uint256 offset_,
+        uint256 limit_
+    ) external view returns (Message[] memory) {
+        string[] memory messages_ = _chatByNFT[nft_].part(offset_, limit_);
+        uint256[] memory timestamps_ = _timestampsByChat[nft_].part(offset_, limit_);
+
+        Message[] memory result_ = new Message[](messages_.length);
+
+        for (uint256 i = 0; i < messages_.length; i++) {
+            result_[i] = Message(messages_[i], timestamps_[i]);
+        }
+
+        return result_;
     }
 
     /**

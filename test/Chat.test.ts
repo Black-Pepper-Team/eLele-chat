@@ -113,7 +113,7 @@ describe("Chat", () => {
       );
     });
 
-    it("should post valid message successfully", async () => {
+    it.only("should post valid message successfully", async () => {
       const circuit = await zkit.getCircuit("PostMessage");
 
       const deadline = (await time.latest()) + 6000;
@@ -157,6 +157,12 @@ describe("Chat", () => {
       await expect(chat.postMessage(erc721.getAddress(), message, proof.root, deadline, formattedProof))
         .to.emit(chat, "MessagePosted")
         .withArgs(await erc721.getAddress(), message);
+
+      const messages = await chat.listMessages(erc721.getAddress(), 0, 10);
+
+      expect(messages.length).to.equal(1);
+      expect(messages[0].message).to.equal(message);
+      expect(messages[0].timestamp).to.equal(await time.latest());
     });
   });
 });
