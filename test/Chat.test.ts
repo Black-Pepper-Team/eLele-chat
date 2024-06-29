@@ -113,7 +113,7 @@ describe("Chat", () => {
       );
     });
 
-    it.only("should post valid message successfully", async () => {
+    it("should post valid message successfully", async () => {
       const circuit = await zkit.getCircuit("PostMessage");
 
       const deadline = (await time.latest()) + 6000;
