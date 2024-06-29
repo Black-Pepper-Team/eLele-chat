@@ -1,9 +1,9 @@
 import { Deployer, Reporter } from "@solarity/hardhat-migrate";
 
-import { ERC20Mock__factory } from "@ethers-v6";
+import { ERC721Mock__factory } from "@ethers-v6";
 
 export = async (deployer: Deployer) => {
-  const erc20 = await deployer.deploy(ERC20Mock__factory, ["Mock", "Mock", 18]);
+  const erc721Mock = await deployer.deploy(ERC721Mock__factory, ["Mock NFT", "Mock NFT"]);
 
-  Reporter.reportContracts(["ERC20Mock", await erc20.getAddress()]);
+  Reporter.reportContracts(["ERC721Mock", await erc721Mock.getAddress()]);
 };

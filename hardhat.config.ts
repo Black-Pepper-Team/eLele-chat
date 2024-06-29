@@ -1,10 +1,13 @@
 import "@nomicfoundation/hardhat-ethers";
 import "@nomicfoundation/hardhat-chai-matchers";
 
+import "@solarity/hardhat-zkit";
+import "@solarity/hardhat-gobind";
 import "@solarity/hardhat-migrate";
 
 import "hardhat-contract-sizer";
 import "hardhat-gas-reporter";
+import "hardhat-abi-exporter";
 
 import "solidity-coverage";
 
@@ -46,6 +49,23 @@ const config: HardhatUserConfig = {
       evmVersion: "paris",
     },
   },
+  zkit: {
+    circuitsDir: "circuits",
+    compilationSettings: {
+      artifactsDir: "zkit/artifacts",
+      onlyFiles: [],
+      skipFiles: [],
+      c: false,
+      json: false,
+      sym: false,
+      contributionTemplate: "groth16",
+      contributions: 1,
+    },
+    quiet: false,
+    verifiersDir: "contracts/verifiers",
+    ptauDir: "zkit/ptau",
+    ptauDownload: true,
+  },
   etherscan: {
     apiKey: {
       sepolia: `${process.env.ETHERSCAN_KEY}`,
@@ -56,6 +76,9 @@ const config: HardhatUserConfig = {
   },
   mocha: {
     timeout: 1000000,
+  },
+  gobind: {
+    deployable: true,
   },
   contractSizer: {
     alphaSort: false,

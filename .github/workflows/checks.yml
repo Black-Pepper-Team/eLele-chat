@@ -15,7 +15,12 @@ jobs:
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v3
-      - name: Setup
+
+      - name: Setup Node.js, Install Packages and Cache
         uses: ./.github/actions/setup
+
+      - name: Run compile
+        run: npm run compile
+
       - name: Run tests
         run: npm run test
