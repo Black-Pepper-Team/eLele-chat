@@ -8,6 +8,7 @@ artifacts
 coverage.json
 coverage
 zkit
+abi
 
 # Typechain generated files
 generated-types

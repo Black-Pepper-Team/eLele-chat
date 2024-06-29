@@ -7,6 +7,7 @@ import "@solarity/hardhat-migrate";
 
 import "hardhat-contract-sizer";
 import "hardhat-gas-reporter";
+import "hardhat-abi-exporter";
 
 import "solidity-coverage";
 
