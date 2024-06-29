@@ -63,7 +63,7 @@ const config: HardhatUserConfig = {
     },
     quiet: false,
     verifiersDir: "contracts/verifiers",
-    ptauDir: "/Users/kirilrs/ptau",
+    ptauDir: "zkit/ptau",
     ptauDownload: true,
   },
   etherscan: {

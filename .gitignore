@@ -7,7 +7,6 @@ cache
 artifacts
 coverage.json
 coverage
-zkit
 abi
 
 # Typechain generated files
