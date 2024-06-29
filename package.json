@@ -6,7 +6,7 @@
   "description": "",
   "scripts": {
     "prepare": "husky",
-    "compile": "npx hardhat compile",
+    "compile": "npx hardhat zkit:compile && npx hardhat zkit:verifiers && npx hardhat compile",
     "coverage": "npx hardhat coverage --solcoverjs ./.solcover.ts",
     "clean": "npx hardhat clean",
     "test": "npx hardhat test",
@@ -26,6 +26,8 @@
     "circomlib": "^2.0.5"
   },
   "devDependencies": {
+    "@iden3/js-crypto": "^1.1.0",
+    "@iden3/js-iden3-core": "^1.4.0",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.7",
     "@nomicfoundation/hardhat-ethers": "^3.0.6",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.11",
@@ -37,6 +39,7 @@
     "@types/mocha": "^10.0.7",
     "@types/node": "^18.19.39",
     "chai": "^4.4.1",
+    "circomlibjs": "^0.1.7",
     "dotenv": "16.4.5",
     "ethers": "^6.13.1",
     "hardhat": "2.20.1",

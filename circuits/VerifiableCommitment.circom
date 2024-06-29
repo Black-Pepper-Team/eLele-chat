@@ -25,7 +25,7 @@ template VerifiableCommitment() {
 
     credentialId <== computedCredId.out;
 
-    component greaterEqThanLowerTime = GreaterEqThan(48); // compare up to 2**64
+    component greaterEqThanLowerTime = GreaterEqThan(64); // compare up to 2**64
     greaterEqThanLowerTime.in[0] <== timestamp;
     greaterEqThanLowerTime.in[1] <== deadline;
 }

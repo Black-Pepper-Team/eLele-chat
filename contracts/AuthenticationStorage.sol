@@ -103,10 +103,10 @@ contract AuthenticationStorage is Initializable, OwnableUpgradeable, UUPSUpgrade
     ) internal view returns (bool) {
         uint256[] memory pubSignals_ = new uint256[](5);
 
-        pubSignals_[0] = uint256(uint160(address(nft_)));
-        pubSignals_[1] = tokenId_;
-        pubSignals_[2] = uint256(uint160(nftOwner_));
-        pubSignals_[3] = uint256(credentialId_);
+        pubSignals_[0] = uint256(credentialId_);
+        pubSignals_[1] = uint256(uint160(address(nft_)));
+        pubSignals_[2] = tokenId_;
+        pubSignals_[3] = uint256(uint160(nftOwner_));
         pubSignals_[4] = deadline_;
 
         return verifier.verifyProof(pubSignals_, zkPoints_);
