@@ -2,6 +2,7 @@ import "@nomicfoundation/hardhat-ethers";
 import "@nomicfoundation/hardhat-chai-matchers";
 
 import "@solarity/hardhat-zkit";
+import "@solarity/hardhat-gobind";
 import "@solarity/hardhat-migrate";
 
 import "hardhat-contract-sizer";
