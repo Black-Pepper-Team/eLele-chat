@@ -1,6 +1,7 @@
 import "@nomicfoundation/hardhat-ethers";
 import "@nomicfoundation/hardhat-chai-matchers";
 
+import "@solarity/hardhat-zkit";
 import "@solarity/hardhat-migrate";
 
 import "hardhat-contract-sizer";
@@ -45,6 +46,23 @@ const config: HardhatUserConfig = {
       },
       evmVersion: "paris",
     },
+  },
+  zkit: {
+    circuitsDir: "circuits",
+    compilationSettings: {
+      artifactsDir: "zkit/artifacts",
+      onlyFiles: [],
+      skipFiles: [],
+      c: false,
+      json: false,
+      sym: false,
+      contributionTemplate: "groth16",
+      contributions: 1,
+    },
+    quiet: false,
+    verifiersDir: "contracts/verifiers",
+    ptauDir: "~/ptau",
+    ptauDownload: true,
   },
   etherscan: {
     apiKey: {

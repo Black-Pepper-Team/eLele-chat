@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import {PoseidonUnit4L} from "@iden3/contracts/lib/Poseidon.sol";
+import {PoseidonUnit5L} from "@iden3/contracts/lib/Poseidon.sol";
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
@@ -72,7 +72,7 @@ contract AuthenticationStorage is Initializable, OwnableUpgradeable, UUPSUpgrade
             revert InvalidZKProof();
         }
 
-        bytes32 value_ = PoseidonUnit4L.poseidon(
+        uint256 value_ = PoseidonUnit5L.poseidon(
             [
                 uint256(uint160(address(nft_))),
                 tokenId_,
@@ -82,7 +82,7 @@ contract AuthenticationStorage is Initializable, OwnableUpgradeable, UUPSUpgrade
             ]
         );
 
-        credentialRegistry.add(credentialId_, value_);
+        credentialRegistry.add(credentialId_, bytes32(value_));
 
         emit Registered(address(nft_), tokenId_, nftOwner_, credentialId_, deadline_);
     }
