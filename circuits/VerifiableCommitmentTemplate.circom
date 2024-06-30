@@ -37,6 +37,8 @@ template VerifiableCommitment() {
     signal input nftOwner;
     signal input deadline;
 
+    signal timestampCheckpoint <== deadline;
+
     // Private signals
     signal input babyJubJubPK_Ax;
     signal input babyJubJubPK_Ay;
@@ -54,7 +56,7 @@ template VerifiableCommitment() {
     credentialId <== credBuild.credentialId;
 
     component greaterEqThanLowerTime = GreaterEqThan(64); // compare up to 2**64
-    greaterEqThanLowerTime.in[0] <== deadline;
+    greaterEqThanLowerTime.in[0] <== timestampCheckpoint;
     greaterEqThanLowerTime.in[1] <== timestamp;
 
     component timestampLowerboundCheck = ForceEqualIfEnabled();

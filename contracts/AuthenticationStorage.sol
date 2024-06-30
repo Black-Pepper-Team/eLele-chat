@@ -16,8 +16,6 @@ import {PoseidonSMT} from "./PoseidonSMT.sol";
 contract AuthenticationStorage is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     using VerifierHelper for address;
 
-    uint256 public constant MAX_DEADLINE = 32 days;
-
     PoseidonSMT public credentialRegistry;
 
     address public verifier;
@@ -27,13 +25,12 @@ contract AuthenticationStorage is Initializable, OwnableUpgradeable, UUPSUpgrade
         uint256 tokenId,
         address nftOwner,
         bytes32 credentialId,
-        uint256 deadline
+        uint256 timestampCheckpoint
     );
 
     error NotNFTOwner();
-    error CredentialExpired(address sender, bytes32 credentialId);
-    error DeadlineExceedsMax(uint256 deadline, uint256 maxDeadline);
     error InvalidZKProof();
+    error LowerTimestampCheckInvalid(uint256 timestampCheckpoint, uint256 currentTime);
 
     constructor() {
         _disableInitializers();
@@ -62,20 +59,25 @@ contract AuthenticationStorage is Initializable, OwnableUpgradeable, UUPSUpgrade
         uint256 tokenId_,
         address nftOwner_,
         bytes32 credentialId_,
-        uint256 deadline_,
+        uint256 timestampCheckpoint_,
         VerifierHelper.ProofPoints calldata zkPoints_
     ) external {
-        if (deadline_ > block.timestamp + MAX_DEADLINE) {
-            revert DeadlineExceedsMax(deadline_, MAX_DEADLINE);
+        if (timestampCheckpoint_ > block.timestamp) {
+            revert LowerTimestampCheckInvalid(timestampCheckpoint_, block.timestamp);
         }
 
         _requireNFTOwner(nft_, tokenId_);
 
-        if (block.timestamp > deadline_) {
-            revert CredentialExpired(_msgSender(), credentialId_);
-        }
-
-        if (!_verifyZKProof(nft_, tokenId_, nftOwner_, credentialId_, deadline_, zkPoints_)) {
+        if (
+            !_verifyZKProof(
+                nft_,
+                tokenId_,
+                nftOwner_,
+                credentialId_,
+                timestampCheckpoint_,
+                zkPoints_
+            )
+        ) {
             revert InvalidZKProof();
         }
 
@@ -85,7 +87,7 @@ contract AuthenticationStorage is Initializable, OwnableUpgradeable, UUPSUpgrade
 
         credentialRegistry.add(credentialId_, bytes32(value_));
 
-        emit Registered(address(nft_), tokenId_, nftOwner_, credentialId_, deadline_);
+        emit Registered(address(nft_), tokenId_, nftOwner_, credentialId_, timestampCheckpoint_);
     }
 
     // solhint-disable-next-line no-empty-blocks
@@ -99,7 +101,7 @@ contract AuthenticationStorage is Initializable, OwnableUpgradeable, UUPSUpgrade
         uint256 tokenId_,
         address nftOwner_,
         bytes32 credentialId_,
-        uint256 deadline_,
+        uint256 timestampCheckpoint_,
         VerifierHelper.ProofPoints calldata zkPoints_
     ) internal view returns (bool) {
         uint256[] memory pubSignals_ = new uint256[](5);
@@ -108,7 +110,7 @@ contract AuthenticationStorage is Initializable, OwnableUpgradeable, UUPSUpgrade
         pubSignals_[1] = uint256(uint160(address(nft_)));
         pubSignals_[2] = tokenId_;
         pubSignals_[3] = uint256(uint160(nftOwner_));
-        pubSignals_[4] = deadline_;
+        pubSignals_[4] = timestampCheckpoint_;
 
         return verifier.verifyProof(pubSignals_, zkPoints_);
     }

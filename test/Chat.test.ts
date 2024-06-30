@@ -9,6 +9,7 @@ import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { Identity } from "@/test/helpers/identity";
 
 import { Reverter } from "@/test/helpers/reverter";
+import { SECONDS_IN_MONTH } from "@/scripts/utils/constants";
 
 import { buildCredentialId, getMessageHash, getPoseidon, normalizeProof } from "@/test/helpers/zkp";
 
@@ -86,6 +87,8 @@ describe("Chat", () => {
     await erc721.mint(SECOND.address, 0);
     secondIdentity = new Identity(ethers.id(SECOND.address));
 
+    await time.increase(SECONDS_IN_MONTH * 12);
+
     await reverter.snapshot();
   });
 
@@ -97,8 +100,8 @@ describe("Chat", () => {
     beforeEach("setup", async () => {
       const circuit = await zkit.getCircuit("VerifiableCommitment");
 
-      const deadline = (await time.latest()) + 5400;
-      creationTimestamp = (await time.latest()) + 5000;
+      creationTimestamp = (await time.latest()) - 2;
+      const deadline = creationTimestamp + 1;
 
       const data = await circuit.generateProof({
         contractId: await erc721.getAddress(),
@@ -125,7 +128,7 @@ describe("Chat", () => {
     it("should post valid message successfully", async () => {
       const circuit = await zkit.getCircuit("PostMessage");
 
-      const expectedMessageArrival = (await time.latest()) + 1000;
+      const validTimeThreshold = creationTimestamp - 1;
       const credentialId = buildCredentialId(
         await erc721.getAddress(),
         0,
@@ -145,7 +148,7 @@ describe("Chat", () => {
         contractId: await erc721.getAddress(),
         root: proof.root,
         messageHash,
-        expectedMessageTimestamp: expectedMessageArrival,
+        expectedMessageTimestamp: validTimeThreshold,
         nftId: 0,
         nftOwner: SECOND.address,
         babyJubJubPK_Ax: secondIdentity.PK.p[0],
@@ -187,7 +190,7 @@ describe("Chat", () => {
         ]),
       ).to.be.true;
 
-      await expect(chat.postMessage(erc721.getAddress(), message, proof.root, expectedMessageArrival, formattedProof))
+      await expect(chat.postMessage(erc721.getAddress(), message, proof.root, validTimeThreshold, formattedProof))
         .to.emit(chat, "MessagePosted")
         .withArgs(await erc721.getAddress(), message);
 
@@ -196,6 +199,78 @@ describe("Chat", () => {
       expect(messages.length).to.equal(1);
       expect(messages[0].message).to.equal(message);
       expect(messages[0].timestamp).to.equal(await time.latest());
+    });
+
+    it("should fail to post message if credential expired", async () => {
+      const circuit = await zkit.getCircuit("PostMessage");
+
+      const validTimeThreshold = creationTimestamp;
+      const credentialId = buildCredentialId(
+        await erc721.getAddress(),
+        0,
+        SECOND.address,
+        secondIdentity.PK.p[0],
+        secondIdentity.PK.p[1],
+        creationTimestamp,
+      );
+      const message = "Hello World!";
+      const messageHash = getMessageHash(message);
+
+      const signature = secondIdentity.signHash(BigInt(messageHash));
+
+      const proof = await tree.getProof(ethers.toBeHex(Poseidon.hash([BigInt(credentialId)])));
+
+      const data = await circuit.generateProof({
+        contractId: await erc721.getAddress(),
+        root: proof.root,
+        messageHash,
+        expectedMessageTimestamp: validTimeThreshold,
+        nftId: 0,
+        nftOwner: SECOND.address,
+        babyJubJubPK_Ax: secondIdentity.PK.p[0],
+        babyJubJubPK_Ay: secondIdentity.PK.p[1],
+        timestamp: creationTimestamp,
+        siblings: proof.siblings,
+        auxKey: proof.auxKey,
+        auxValue: proof.auxValue,
+        auxIsEmpty: Number(proof.auxExistence),
+        isExclusion: 0,
+        messageSignatureR8x: signature.R8[0],
+        messageSignatureR8y: signature.R8[1],
+        messageSignatureS: signature.S,
+      });
+
+      const formattedProof = normalizeProof(data);
+
+      expect(
+        await circuit.verifyProof({
+          proof: {
+            pi_a: [String(formattedProof.a[0]), String(formattedProof.a[1])],
+            pi_b: [
+              [String(formattedProof.b[0][1]), String(formattedProof.b[0][0])],
+              [String(formattedProof.b[1][1]), String(formattedProof.b[1][0])],
+            ],
+            pi_c: [String(formattedProof.c[0]), String(formattedProof.c[1])],
+            protocol: "groth16",
+            curve: "bn128",
+          },
+          publicSignals: [data.publicSignals[0], data.publicSignals[1], data.publicSignals[2], data.publicSignals[3]],
+        }),
+      ).to.be.true;
+      expect(
+        await postMessageVerifier.verifyProof(formattedProof.a, formattedProof.b, formattedProof.c, [
+          data.publicSignals[0],
+          data.publicSignals[1],
+          data.publicSignals[2],
+          data.publicSignals[3],
+        ]),
+      ).to.be.true;
+
+      await time.increase((await chat.LOWER_TIMESTAMP_CHECK()) + 1n);
+
+      await expect(chat.postMessage(erc721.getAddress(), message, proof.root, validTimeThreshold, formattedProof))
+        .to.be.revertedWithCustomError(chat, "TimestampCheckpointTooOld")
+        .withArgs(validTimeThreshold, BigInt(await time.latest()) - (await chat.LOWER_TIMESTAMP_CHECK()) + 1n);
     });
   });
 });

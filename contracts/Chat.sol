@@ -31,7 +31,7 @@ contract Chat is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         uint256 timestamp;
     }
 
-    uint256 public constant DEADLINE_VALIDITY_WINDOW = 1 hours;
+    uint256 public constant LOWER_TIMESTAMP_CHECK = 1 weeks;
 
     address public postMessageVerifier;
 
@@ -42,9 +42,9 @@ contract Chat is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
     event MessagePosted(IERC721 nft, string message);
 
-    error CredentialRootInvalid();
-    error DeadlineNotMet(uint256 deadline_, uint256 currectTime_);
     error InvalidZKProof();
+    error CredentialRootInvalid();
+    error TimestampCheckpointTooOld(uint256 timestamp, uint256 lowerBound);
 
     constructor() {
         _disableInitializers();
@@ -72,18 +72,21 @@ contract Chat is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         IERC721 nft_,
         string memory message_,
         bytes32 root_,
-        uint256 expectedMessageTime_,
+        uint256 timestampCheckpoint_,
         VerifierHelper.ProofPoints calldata zkPoints_
     ) external {
         if (!credentialStorage.isRootValid(root_)) {
             revert CredentialRootInvalid();
         }
 
-        if (expectedMessageTime_ < block.timestamp) {
-            revert DeadlineNotMet(expectedMessageTime_, block.timestamp);
+        if (block.timestamp - LOWER_TIMESTAMP_CHECK > timestampCheckpoint_) {
+            revert TimestampCheckpointTooOld(
+                timestampCheckpoint_,
+                block.timestamp - LOWER_TIMESTAMP_CHECK
+            );
         }
 
-        if (!_verifyZKProof(nft_, message_, root_, expectedMessageTime_, zkPoints_)) {
+        if (!_verifyZKProof(nft_, message_, root_, timestampCheckpoint_, zkPoints_)) {
             revert InvalidZKProof();
         }
 
@@ -110,6 +113,10 @@ contract Chat is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         return result_;
     }
 
+    function getMessagesCount(address nft_) external view returns (uint256) {
+        return _chatByNFT[nft_].length();
+    }
+
     /**
      * @notice Verify posting message eligibility via ZK proof
      */
@@ -117,7 +124,7 @@ contract Chat is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         IERC721 nft_,
         string memory message_,
         bytes32 root_,
-        uint256 deadline_,
+        uint256 timestampCheckpoint_,
         VerifierHelper.ProofPoints memory zkPoints_
     ) internal view returns (bool) {
         uint256[] memory pubSignals_ = new uint256[](4);
@@ -128,7 +135,7 @@ contract Chat is Initializable, OwnableUpgradeable, UUPSUpgradeable {
             keccak256(abi.encodePacked(message_)) &
                 0x00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
         );
-        pubSignals_[3] = deadline_;
+        pubSignals_[3] = timestampCheckpoint_;
 
         return postMessageVerifier.verifyProof(pubSignals_, zkPoints_);
     }

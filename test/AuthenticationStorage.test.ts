@@ -62,6 +62,8 @@ describe("AuthenticationStorage", () => {
     await erc721.mint(SECOND.address, 1);
     secondIdentity = new Identity(ethers.id(SECOND.address));
 
+    await time.increase(SECONDS_IN_MONTH * 12);
+
     await reverter.snapshot();
   });
 
@@ -71,8 +73,8 @@ describe("AuthenticationStorage", () => {
     it("should register with valid proof correctly", async () => {
       const circuit = await zkit.getCircuit("VerifiableCommitment");
 
-      const timestamp = (await time.latest()) + SECONDS_IN_MONTH + 2;
-      const deadline = timestamp + 300;
+      const timestamp = (await time.latest()) - 2;
+      const deadline = timestamp + 1;
 
       const data = await circuit.generateProof({
         contractId: await erc721.getAddress(),

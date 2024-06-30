@@ -33,6 +33,8 @@ template PostMessage(levels) {
     signal input messageHash;
     signal input expectedMessageTimestamp;
 
+    signal validTimeThreshold <== expectedMessageTimestamp;
+
     // Private
     signal input nftId;
     signal input nftOwner;
@@ -100,7 +102,7 @@ template PostMessage(levels) {
 
     component greaterEqThanUpperTime = GreaterEqThan(64); // compare up to 2**64
     greaterEqThanUpperTime.in[0] <== timestamp;
-    greaterEqThanUpperTime.in[1] <== expectedMessageTimestamp;
+    greaterEqThanUpperTime.in[1] <== validTimeThreshold;
 
     component timestampUpperBoundCheck = ForceEqualIfEnabled();
     timestampUpperBoundCheck.in[0] <== greaterEqThanUpperTime.out;
