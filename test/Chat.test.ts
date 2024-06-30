@@ -12,7 +12,14 @@ import { Reverter } from "@/test/helpers/reverter";
 
 import { buildCredentialId, getMessageHash, getPoseidon, normalizeProof } from "@/test/helpers/zkp";
 
-import { AuthenticationStorage, Chat, ERC1967Proxy__factory, ERC721Mock, PoseidonSMT } from "@ethers-v6";
+import {
+  AuthenticationStorage,
+  Chat,
+  ERC1967Proxy__factory,
+  ERC721Mock,
+  PoseidonSMT,
+  PostMessageVerifier,
+} from "@ethers-v6";
 
 describe("Chat", () => {
   const reverter = new Reverter();
@@ -26,6 +33,8 @@ describe("Chat", () => {
 
   let chat: Chat;
   let authStorage: AuthenticationStorage;
+
+  let postMessageVerifier: PostMessageVerifier;
 
   before(async () => {
     [SECOND] = await ethers.getSigners();
@@ -67,7 +76,7 @@ describe("Chat", () => {
     chat = chat.attach(await proxy.getAddress()) as Chat;
 
     const PostMessageVerifier = await ethers.getContractFactory("PostMessageVerifier");
-    const postMessageVerifier = await PostMessageVerifier.deploy();
+    postMessageVerifier = await PostMessageVerifier.deploy();
 
     await chat.__Chat_init(await tree.getAddress(), await postMessageVerifier.getAddress());
 
@@ -153,6 +162,30 @@ describe("Chat", () => {
       });
 
       const formattedProof = normalizeProof(data);
+
+      expect(
+        await circuit.verifyProof({
+          proof: {
+            pi_a: [String(formattedProof.a[0]), String(formattedProof.a[1])],
+            pi_b: [
+              [String(formattedProof.b[0][1]), String(formattedProof.b[0][0])],
+              [String(formattedProof.b[1][1]), String(formattedProof.b[1][0])],
+            ],
+            pi_c: [String(formattedProof.c[0]), String(formattedProof.c[1])],
+            protocol: "groth16",
+            curve: "bn128",
+          },
+          publicSignals: [data.publicSignals[0], data.publicSignals[1], data.publicSignals[2], data.publicSignals[3]],
+        }),
+      ).to.be.true;
+      expect(
+        await postMessageVerifier.verifyProof(formattedProof.a, formattedProof.b, formattedProof.c, [
+          data.publicSignals[0],
+          data.publicSignals[1],
+          data.publicSignals[2],
+          data.publicSignals[3],
+        ]),
+      ).to.be.true;
 
       await expect(chat.postMessage(erc721.getAddress(), message, proof.root, deadline, formattedProof))
         .to.emit(chat, "MessagePosted")

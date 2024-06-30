@@ -20,6 +20,15 @@ contract ERC721Mock is ERC721Enumerable, ERC721URIStorage, Ownable {
         _burn(tokenId_);
     }
 
+    function getTokensByOwner(address owner_) public view returns (uint256[] memory tokens_) {
+        uint256 tokenCount_ = balanceOf(owner_);
+
+        tokens_ = new uint256[](tokenCount_);
+        for (uint256 i = 0; i < tokenCount_; ++i) {
+            tokens_[i] = tokenOfOwnerByIndex(owner_, i);
+        }
+    }
+
     function tokenURI(
         uint256 tokenId
     ) public view override(ERC721URIStorage, ERC721) returns (string memory) {
