@@ -31,7 +31,7 @@ template PostMessage(levels) {
     signal input contractId;
     signal input root;
     signal input messageHash;
-    signal input deadline;
+    signal input expectedMessageTimestamp;
 
     // Private
     signal input nftId;
@@ -56,11 +56,10 @@ template PostMessage(levels) {
 
     // ----------------------------------- Logic -----------------------------------
 
-    component credBuild = VerifiableCommitment();
+    component credBuild = BuildVerifiableCommitment();
     credBuild.contractId <== contractId;
     credBuild.nftId <== nftId;
     credBuild.nftOwner <== nftOwner;
-    credBuild.deadline <== deadline;
 
     credBuild.babyJubJubPK_Ax <== babyJubJubPK_Ax;
     credBuild.babyJubJubPK_Ay <== babyJubJubPK_Ay;
@@ -98,8 +97,17 @@ template PostMessage(levels) {
     sigVerifier.signatureR8X <== messageSignatureR8x;
     sigVerifier.signatureR8Y <== messageSignatureR8y;
     sigVerifier.data <== messageHash;
+
+    component greaterEqThanUpperTime = GreaterEqThan(64); // compare up to 2**64
+    greaterEqThanUpperTime.in[0] <== timestamp;
+    greaterEqThanUpperTime.in[1] <== expectedMessageTimestamp;
+
+    component timestampUpperBoundCheck = ForceEqualIfEnabled();
+    timestampUpperBoundCheck.in[0] <== greaterEqThanUpperTime.out;
+    timestampUpperBoundCheck.in[1] <== 1;
+    timestampUpperBoundCheck.enabled <== 1;
 }
 
 component main {
-    public [contractId, root, messageHash, deadline]
+    public [contractId, root, messageHash, expectedMessageTimestamp]
 } = PostMessage(80);

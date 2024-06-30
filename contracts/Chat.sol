@@ -72,18 +72,18 @@ contract Chat is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         IERC721 nft_,
         string memory message_,
         bytes32 root_,
-        uint256 deadline_,
+        uint256 expectedMessageTime_,
         VerifierHelper.ProofPoints calldata zkPoints_
     ) external {
         if (!credentialStorage.isRootValid(root_)) {
             revert CredentialRootInvalid();
         }
 
-        if (deadline_ < block.timestamp) {
-            revert DeadlineNotMet(deadline_, block.timestamp);
+        if (expectedMessageTime_ < block.timestamp) {
+            revert DeadlineNotMet(expectedMessageTime_, block.timestamp);
         }
 
-        if (!_verifyZKProof(nft_, message_, root_, deadline_, zkPoints_)) {
+        if (!_verifyZKProof(nft_, message_, root_, expectedMessageTime_, zkPoints_)) {
             revert InvalidZKProof();
         }
 

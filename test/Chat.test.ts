@@ -125,7 +125,7 @@ describe("Chat", () => {
     it("should post valid message successfully", async () => {
       const circuit = await zkit.getCircuit("PostMessage");
 
-      const deadline = (await time.latest()) + 5300;
+      const expectedMessageArrival = (await time.latest()) + 1000;
       const credentialId = buildCredentialId(
         await erc721.getAddress(),
         0,
@@ -145,7 +145,7 @@ describe("Chat", () => {
         contractId: await erc721.getAddress(),
         root: proof.root,
         messageHash,
-        deadline: deadline,
+        expectedMessageTimestamp: expectedMessageArrival,
         nftId: 0,
         nftOwner: SECOND.address,
         babyJubJubPK_Ax: secondIdentity.PK.p[0],
@@ -187,7 +187,7 @@ describe("Chat", () => {
         ]),
       ).to.be.true;
 
-      await expect(chat.postMessage(erc721.getAddress(), message, proof.root, deadline, formattedProof))
+      await expect(chat.postMessage(erc721.getAddress(), message, proof.root, expectedMessageArrival, formattedProof))
         .to.emit(chat, "MessagePosted")
         .withArgs(await erc721.getAddress(), message);
 
