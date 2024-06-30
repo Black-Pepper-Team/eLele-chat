@@ -5,10 +5,10 @@ import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 
 import { Identity } from "@/test/helpers/identity";
-
 import { Reverter } from "@/test/helpers/reverter";
-
 import { getPoseidon, normalizeProof } from "@/test/helpers/zkp";
+
+import { SECONDS_IN_MONTH } from "@/scripts/utils/constants";
 
 import { AuthenticationStorage, ERC1967Proxy__factory, ERC721Mock, PoseidonSMT } from "@ethers-v6";
 
@@ -71,8 +71,8 @@ describe("AuthenticationStorage", () => {
     it("should register with valid proof correctly", async () => {
       const circuit = await zkit.getCircuit("VerifiableCommitment");
 
-      const deadline = (await time.latest()) + 15;
-      const timestamp = (await time.latest()) + 10;
+      const timestamp = (await time.latest()) + SECONDS_IN_MONTH + 2;
+      const deadline = timestamp + 300;
 
       const data = await circuit.generateProof({
         contractId: await erc721.getAddress(),

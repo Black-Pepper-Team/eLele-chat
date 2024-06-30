@@ -61,4 +61,13 @@ template VerifiableCommitment() {
     timestampLowerboundCheck.in[0] <== greaterEqThanLowerTime.out;
     timestampLowerboundCheck.in[1] <== 1;
     timestampLowerboundCheck.enabled <== 1;
+
+    component greaterEqThanUpperTime = GreaterEqThan(64); // compare up to 2**64
+    greaterEqThanUpperTime.in[0] <== timestamp + 500;
+    greaterEqThanUpperTime.in[1] <== deadline;
+
+    component timestampUpperBoundCheck = ForceEqualIfEnabled();
+    timestampUpperBoundCheck.in[0] <== greaterEqThanUpperTime.out;
+    timestampUpperBoundCheck.in[1] <== 1;
+    timestampUpperBoundCheck.enabled <== 1;
 }

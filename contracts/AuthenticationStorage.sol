@@ -16,6 +16,8 @@ import {PoseidonSMT} from "./PoseidonSMT.sol";
 contract AuthenticationStorage is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     using VerifierHelper for address;
 
+    uint256 public constant MAX_DEADLINE = 32 days;
+
     PoseidonSMT public credentialRegistry;
 
     address public verifier;
@@ -30,6 +32,7 @@ contract AuthenticationStorage is Initializable, OwnableUpgradeable, UUPSUpgrade
 
     error NotNFTOwner();
     error CredentialExpired(address sender, bytes32 credentialId);
+    error DeadlineExceedsMax(uint256 deadline, uint256 maxDeadline);
     error InvalidZKProof();
 
     constructor() {
@@ -62,9 +65,12 @@ contract AuthenticationStorage is Initializable, OwnableUpgradeable, UUPSUpgrade
         uint256 deadline_,
         VerifierHelper.ProofPoints calldata zkPoints_
     ) external {
+        if (deadline_ > block.timestamp + MAX_DEADLINE) {
+            revert DeadlineExceedsMax(deadline_, MAX_DEADLINE);
+        }
+
         _requireNFTOwner(nft_, tokenId_);
 
-        // TODO: deadline sanity check to be not too far in the future
         if (block.timestamp > deadline_) {
             revert CredentialExpired(_msgSender(), credentialId_);
         }

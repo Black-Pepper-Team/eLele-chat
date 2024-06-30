@@ -88,7 +88,7 @@ describe("Chat", () => {
     beforeEach("setup", async () => {
       const circuit = await zkit.getCircuit("VerifiableCommitment");
 
-      const deadline = (await time.latest()) + 6000;
+      const deadline = (await time.latest()) + 5400;
       creationTimestamp = (await time.latest()) + 5000;
 
       const data = await circuit.generateProof({
@@ -116,7 +116,7 @@ describe("Chat", () => {
     it("should post valid message successfully", async () => {
       const circuit = await zkit.getCircuit("PostMessage");
 
-      const deadline = (await time.latest()) + 6000;
+      const deadline = (await time.latest()) + 5300;
       const credentialId = buildCredentialId(
         await erc721.getAddress(),
         0,
