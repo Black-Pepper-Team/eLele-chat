@@ -34,7 +34,7 @@
     "@nomicfoundation/hardhat-network-helpers": "^1.0.11",
     "@solarity/hardhat-gobind": "^1.2.2",
     "@solarity/hardhat-migrate": "^2.1.10",
-    "@solarity/hardhat-zkit": "^0.1.0",
+    "@solarity/hardhat-zkit": "^0.3.0-rc.0",
     "@typechain/ethers-v6": "^0.5.1",
     "@typechain/hardhat": "^9.1.0",
     "@types/chai": "^4.3.16",

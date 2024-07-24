@@ -62,13 +62,24 @@ const config: HardhatUserConfig = {
       c: false,
       json: false,
       sym: false,
-      contributionTemplate: "groth16",
-      contributions: 1,
     },
-    quiet: false,
+    setupSettings: {
+      contributionSettings: {
+        contributionTemplate: "groth16",
+        contributions: 0,
+      },
+      onlyFiles: [],
+      skipFiles: [],
+      ptauDir: "zkit/ptau",
+      ptauDownload: true,
+    },
+    typesSettings: {
+      typesArtifactsDir: "zkit/abi",
+      typesDir: "generated-types/zkit",
+    },
     verifiersDir: "contracts/verifiers",
-    ptauDir: "zkit/ptau",
-    ptauDownload: true,
+    nativeCompiler: true,
+    quiet: false,
   },
   etherscan: {
     apiKey: {
@@ -115,4 +126,6 @@ const config: HardhatUserConfig = {
   },
 };
 
+// /Users/kirilrs/Desktop/Experiments/eLele/eLele-chat/zkit/artifacts/circuits/VerifiableCommitment.circom/VerifiableCommitment.zkey
+// /Users/kirilrs/Desktop/Experiments/eLele/eLele-chat/zkit/artifacts/VerifiableCommitment/VerifiableCommitment.zkey:
 export default config;
